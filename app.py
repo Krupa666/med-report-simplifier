@@ -38,9 +38,8 @@ ALLOWED_EXTENSIONS = {"pdf", "jpg", "jpeg", "png", "txt"}
 # ─────────────────────────────────────────────
 #  ADMIN CREDENTIALS  (change these!)
 # ─────────────────────────────────────────────
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin@mediscan123"
-
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin@mediscan123")
 
 # ─────────────────────────────────────────────
 #  DATABASE SETUP
