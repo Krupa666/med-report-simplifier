@@ -118,23 +118,45 @@ def extract_text(filepath):
     ext = filepath.rsplit(".", 1)[1].lower()
 
     try:
-        # PDF with selectable text (FAST)
+        # ---------- PDF ----------
         if ext == "pdf":
             text = ""
+
+            # 1️⃣ Try normal text extraction (FAST)
             with pdfplumber.open(filepath) as pdf:
-                for page in pdf.pages:
+                for page in pdf.pages[:3]:   # limit pages
                     t = page.extract_text()
                     if t:
                         text += t + "\n"
 
-            return text.strip()   # return empty string if no text
+            if text.strip():
+                return text.strip()
 
-        # TXT files
+            # 2️⃣ OCR fallback (LIMITED & SAFE)
+            images = convert_from_path(
+                filepath,
+                first_page=1,
+                last_page=2   # VERY IMPORTANT
+            )
+
+            ocr_text = ""
+            for img in images:
+                ocr_text += pytesseract.image_to_string(
+                    img, config="--psm 6"
+                ) + "\n"
+
+            return ocr_text.strip()
+
+        # ---------- IMAGES ----------
+        elif ext in ("jpg", "jpeg", "png"):
+            img = Image.open(filepath)
+            return pytesseract.image_to_string(img, config="--psm 6").strip()
+
+        # ---------- TXT ----------
         elif ext == "txt":
             with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read().strip()
 
-        # Images / scanned PDFs not supported for now
         return ""
 
     except Exception as e:
