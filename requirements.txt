@@ -6,4 +6,3 @@ pillow
 pytesseract
 pdf2image
 openai
-sqlite3
