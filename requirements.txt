@@ -1,7 +1,9 @@
+pyngrok
 flask
+gunicorn
 pdfplumber
+pillow
 pytesseract
 pdf2image
-pillow
 openai
-pyngrok
+sqlite3
