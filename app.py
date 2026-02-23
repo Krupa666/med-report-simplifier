@@ -8,17 +8,15 @@ import pdfplumber
 from PIL import Image
 import pytesseract
 from openai import OpenAI
-
-pytesseract.pytesseract.tesseract_cmd = (
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-)
+BASE_DIR = os.getcwd()   # works on Render
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+DB_PATH = os.path.join(BASE_DIR, "mediscan.db")
 from pdf2image import convert_from_path
 
 
 # ─────────────────────────────────────────────
 #  CONFIG
 # ─────────────────────────────────────────────
-BASE_DIR   = r"C:\medpro"
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 DB_PATH    = os.path.join(BASE_DIR, "database", "mediscan.db")
 
@@ -30,7 +28,7 @@ app.secret_key = "mediscan_secret_key_change_in_production"
 
 # OpenRouter client
 client = OpenAI(
-    api_key="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",
+    api_key=os.environ.get("OPENROUTER_API_KEY"),
     base_url="https://openrouter.ai/api/v1",
 )
 
@@ -129,10 +127,8 @@ def extract_text(filepath):
                         text += t + "\n"
             if text.strip():
                 return text
-            images = convert_from_path(
-                filepath,
-                poppler_path=r"C:\poppler\poppler-25.12.0\Library\bin"
-            )
+            
+            images = convert_from_path(filepath)
             ocr_text = ""
             for img in images:
                 ocr_text += pytesseract.image_to_string(img, config="--psm 6") + "\n"
@@ -774,4 +770,4 @@ def admin_chat():
 #  RUN
 # ─────────────────────────────────────────────
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run()
