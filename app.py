@@ -113,18 +113,17 @@ def admin_required(f):
             return redirect(url_for("admin_login"))
         return f(*args, **kwargs)
     return decorated
-
 def extract_text(filepath):
     ext = filepath.rsplit(".", 1)[1].lower()
 
     try:
-        # ---------- PDF ----------
+        # -------- PDF --------
         if ext == "pdf":
             text = ""
 
-            # 1️⃣ Try normal text extraction (FAST)
+            # 1️⃣ Try normal text extraction first
             with pdfplumber.open(filepath) as pdf:
-                for page in pdf.pages[:3]:   # limit pages
+                for page in pdf.pages[:2]:  # limit pages
                     t = page.extract_text()
                     if t:
                         text += t + "\n"
@@ -132,7 +131,7 @@ def extract_text(filepath):
             if text.strip():
                 return text.strip()
 
-            # 2️⃣ OCR fallback (LIMITED & SAFE)
+            # 2️⃣ OCR fallback for scanned PDFs (LIMITED)
             images = convert_from_path(
                 filepath,
                 first_page=1,
@@ -147,12 +146,12 @@ def extract_text(filepath):
 
             return ocr_text.strip()
 
-        # ---------- IMAGES ----------
+        # -------- IMAGE --------
         elif ext in ("jpg", "jpeg", "png"):
             img = Image.open(filepath)
             return pytesseract.image_to_string(img, config="--psm 6").strip()
 
-        # ---------- TXT ----------
+        # -------- TXT --------
         elif ext == "txt":
             with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
                 return f.read().strip()
@@ -162,8 +161,7 @@ def extract_text(filepath):
     except Exception as e:
         print("Text extraction error:", e)
         return ""
-
-
+    
 def parse_severity_level(severity_text: str) -> int:
     if not severity_text:
         return 0
