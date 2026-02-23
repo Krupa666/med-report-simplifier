@@ -114,38 +114,32 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
-
 def extract_text(filepath):
     ext = filepath.rsplit(".", 1)[1].lower()
+
     try:
+        # PDF with selectable text (FAST)
         if ext == "pdf":
             text = ""
             with pdfplumber.open(filepath) as pdf:
                 for page in pdf.pages:
                     t = page.extract_text()
-                    if isinstance(t, str) and t.strip():
+                    if t:
                         text += t + "\n"
-            if text.strip():
-                return text
-            
-            images = convert_from_path(filepath)
-            ocr_text = ""
-            for img in images:
-                ocr_text += pytesseract.image_to_string(img, config="--psm 6") + "\n"
-            return ocr_text or ""
 
-        elif ext in ("jpg", "jpeg", "png"):
-            img = Image.open(filepath)
-            return pytesseract.image_to_string(img, config="--psm 6") or ""
+            return text.strip()   # return empty string if no text
 
+        # TXT files
         elif ext == "txt":
             with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-                return f.read() or ""
+                return f.read().strip()
+
+        # Images / scanned PDFs not supported for now
+        return ""
 
     except Exception as e:
         print("Text extraction error:", e)
         return ""
-    return ""
 
 
 def parse_severity_level(severity_text: str) -> int:
@@ -368,9 +362,10 @@ def analyze():
         elif not isinstance(text, str):
             text = str(text)
         text = text.strip()
-
         if not text:
-            return render_template("analyze.html", error="Could not extract text from the file.")
+            return render_template(
+        "analyze.html",
+        error="This file appears to be scanned or image-based. Text extraction is disabled on the demo server. Please upload a text-based PDF.")
 
         result    = analyze_with_ai(text)
         sev_level = result.get("severity_level") or parse_severity_level(result.get("severity", ""))
